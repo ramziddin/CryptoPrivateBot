@@ -8,5 +8,14 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "mongoose": "^6.2.1",
+    "telegraf": "^3.39.0",
+    "telegraf-i18n": "^6.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
 }
