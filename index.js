@@ -1,9 +1,16 @@
+const express = require("express")
 const mongoose = require("mongoose")
 const { Telegraf, Markup } = require("telegraf")
 const i18nMiddleware = require("./helpers/i18n")
 const stageMiddleware = require("./scenes/stage")
 const sessionMiddleware = require("./helpers/session")
-const { NODE_ENV, BOT_TOKEN, MONGODB_URI } = require("./helpers/env")
+const {
+  NODE_ENV,
+  BOT_TOKEN,
+  MONGODB_URI,
+  APP_URL,
+  PORT,
+} = require("./helpers/env")
 const { getUserTelegramId, createUser, getUser } = require("./helpers/user")
 const { cryptoPay } = require("./helpers/cryptoPay")
 
@@ -139,6 +146,16 @@ async function main() {
 
   if (NODE_ENV === "development") {
     bot.startPolling()
+  } else if (NODE_ENV === "production") {
+    const webhookRoute = `bot${BOT_TOKEN}`
+
+    await bot.telegram.setWebhook(`${APP_URL}${webhookRoute}`)
+
+    const server = express()
+
+    server.use(bot.webhookCallback(`/${webhookRoute}`))
+
+    server.listen(PORT)
   }
 }
 
