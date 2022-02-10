@@ -145,6 +145,7 @@ async function main() {
   })
 
   if (NODE_ENV === "development") {
+    bot.telegram.deleteWebhook()
     bot.startPolling()
   } else if (NODE_ENV === "production") {
     const webhookRoute = `bot${BOT_TOKEN}`
