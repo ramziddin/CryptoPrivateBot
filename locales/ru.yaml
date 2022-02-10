@@ -1,0 +1,30 @@
+scenes:
+  start: |
+    Crypto Private Bot — подключайте и монетизируйте ваши каналы, получайте криптовалюты через Crypto Pay API.
+
+    Подписывайтесь на наш канал и вступайте к наш чат.
+  
+  language: |
+    Выберите язык
+
+  settings: |
+    Настройки
+
+notifications:
+  canManage: |
+    Теперь бот может принимать платежи и управлять подписчиками в канале ${channelTitle}.
+  canNotManage: |
+    Бот больше не может принимать платежи и управлять подписчиками канала ${channelTitle}, из-за недостатка прав.
+  notAnOwner: |
+    Только владелец канала ${channelTitle} может управлять им в боте.
+  joinRequest: |
+    Вы запросили вступление в канал ${channelTitle}.
+
+buttons:
+  back: Назад
+  channels: Каналы
+  subscriptions: Подписки
+  settings: Настройки
+  language: Язык
+  manage: Управление
+  paySubscription: Оплатить подписку

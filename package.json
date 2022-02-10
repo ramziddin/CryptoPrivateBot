@@ -4,12 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@foile/crypto-pay-api": "^1.0.3",
     "dotenv": "^16.0.0",
     "mongoose": "^6.2.1",
     "telegraf": "^3.39.0",

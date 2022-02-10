@@ -1,0 +1,30 @@
+scenes:
+  start: |
+    Crypto Private Bot — connect and monetize your channels, receive crypto currencies via Crypto Pay API.
+
+    Follow our channel and join our chat.
+  
+  language: |
+    Choose a language
+
+  settings: |
+    Settings
+
+notifications:
+  canManage: |
+    The bot now can accept payments and manage subscribers in ${channelTitle} channel.
+  canNotManage: |
+    The bot now can't manage ${channelTitle}, due to insufficient permissions.
+  notAnOwner: |
+    Only the owner of ${channelTitle} channel can manage it in the bot.
+  joinRequest: |
+    You've requested to join ${channelTitle} channel.
+
+buttons:
+  back: Back
+  channels: Channels
+  subscriptions: Subscriptions
+  settings: Settings
+  language: Language
+  manage: Manage
+  paySubscription: Pay subscription
