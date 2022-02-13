@@ -7,6 +7,7 @@ const userSchema = new Schema(
     id: {
       type: Number,
       unique: true,
+      required: true,
     },
     language: {
       type: String,
@@ -16,6 +17,7 @@ const userSchema = new Schema(
       type: Schema.Types.Mixed,
       default: {},
     },
+    channels: [Number],
   },
   {
     minimize: false,

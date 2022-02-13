@@ -9,6 +9,9 @@ scenes:
 
   settings: |
     Настройки
+  
+  channel: |
+    Управление каналом ${channelTitle}
 
 notifications:
   canManage: |
@@ -19,6 +22,10 @@ notifications:
     Только владелец канала ${channelTitle} может управлять им в боте.
   joinRequest: |
     Вы запросили вступление в канал ${channelTitle}.
+  noAccessToChannel: |
+    Бот больше не имеет доступа к данному каналу.
+  canNotActivate: |
+    Данный канал не может быть активирован. Пожалуйста, установите стоимость подписки, валюту и ссылку на канал.
 
 buttons:
   back: Назад

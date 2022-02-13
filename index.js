@@ -13,6 +13,12 @@ const {
 } = require("./helpers/env")
 const { getUserTelegramId, createUser, getUser } = require("./helpers/user")
 const { cryptoPay } = require("./helpers/cryptoPay")
+const {
+  getChannel,
+  createChannel,
+  deleteChannel,
+  canChannelActivate,
+} = require("./helpers/channel")
 
 async function main() {
   await mongoose.connect(MONGODB_URI)
@@ -22,7 +28,7 @@ async function main() {
   bot.use(i18nMiddleware)
 
   bot.use(async (ctx, next) => {
-    // If the received message is a private chat
+    // If the received message is from a private chat
     if (ctx.chat?.type === "private") {
       const id = getUserTelegramId(ctx)
       const user = await getUser(id)
@@ -39,13 +45,14 @@ async function main() {
       return await next()
     }
 
-    // If a bot was added/removed to/from a channel
+    // If a bot was added/removed to/from a chat
     const myChatMember = ctx.update.my_chat_member
     if (myChatMember) {
-      const { chat, from, new_chat_member, old_chat_member } = myChatMember
+      const { chat, new_chat_member, old_chat_member } = myChatMember
 
       if (chat.type === "channel") {
-        const id = from.id
+        const id = getUserTelegramId(myChatMember)
+
         const user = await getUser(id)
 
         ctx.i18n.locale(user?.language || "en")
@@ -53,17 +60,23 @@ async function main() {
         // Bot was added to a channel as an admin
         if (new_chat_member.status === "administrator") {
           const admins = await ctx.telegram.getChatAdministrators(chat.id)
-          const owner = admins.filter((admin) => admin.status === "creator")[0]
-          const ownerId = owner.user.id
+
+          const channelOwner = admins.filter(
+            (admin) => admin.status === "creator"
+          )[0]
+
+          const channelOwnerId = channelOwner.user.id
 
           // If bot was added to a channel not by the owner
-          if (id !== ownerId) {
+          if (id !== channelOwnerId) {
             await ctx.telegram.sendMessage(
               id,
               ctx.i18n.t("notifications.notAnOwner", {
                 channelTitle: chat.title,
               })
             )
+
+            await ctx.telegram.leaveChat(chat.id)
 
             return
           }
@@ -76,43 +89,71 @@ async function main() {
             old_chat_member.can_restrict_members &&
             old_chat_member.can_invite_users
 
-          // If bot can manage subscribers
+          // If bot has the required permissions
           if (hasRequiredPermissions && !hadRequiredPersmissions) {
+            const channel = await getChannel(chat.id)
+
+            if (!channel) {
+              await createChannel(chat.id)
+            }
+
             await ctx.telegram.sendMessage(
-              ownerId,
+              id,
               ctx.i18n.t("notifications.canManage", {
                 channelTitle: chat.title,
               }),
               Markup.inlineKeyboard([
-                [Markup.callbackButton(ctx.i18n.t("buttons.manage"), "_")],
+                [
+                  Markup.callbackButton(
+                    ctx.i18n.t("buttons.manage"),
+                    `channel:${chat.id}`
+                  ),
+                ],
               ]).extra()
             )
-          } else if (!hasRequiredPermissions && hadRequiredPersmissions) {
+          }
+
+          // If bot lost the required permissions
+          if (!hasRequiredPermissions && hadRequiredPersmissions) {
             await ctx.telegram.sendMessage(
-              ownerId,
+              id,
               ctx.i18n.t("notifications.canNotManage", {
                 channelTitle: chat.title,
               })
             )
           }
         }
+
+        // If the bot was removed from a channel
+        if (new_chat_member.status === "left") {
+          await deleteChannel(chat.id)
+        }
       }
     }
 
-    // On new channel join request
+    // On new chat join request
     const joinRequest = ctx.update.chat_join_request
     if (joinRequest) {
-      const channelTitle = joinRequest.chat.title
       const issuerId = joinRequest.from.id
+
+      const { id: channelId, title: channelTitle } = joinRequest.chat
+
+      const channel = await getChannel(channelId)
+
+      if (!canChannelActivate(channel)) return
 
       const user = await getUser(issuerId)
 
       ctx.i18n.locale(user?.language || "en")
 
-      const invoice = await cryptoPay.createInvoice("TON", "0.01", {
-        paid_btn_name: "openChannel",
-        paid_btn_url: `https://t.me/RamzCoder`,
-      })
+      const invoice = await cryptoPay.createInvoice(
+        channel.currency,
+        channel.price,
+        {
+          paid_btn_name: "openChannel",
+          paid_btn_url: channel.link,
+        }
+      )
 
       try {
         await ctx.telegram.sendMessage(
@@ -130,7 +171,7 @@ async function main() {
           ]).extra()
         )
       } catch (e) {
-        console.dir(e, { depth: null })
+        // The user probably blocked our bot...
       }
     }
   })
@@ -138,16 +179,26 @@ async function main() {
   bot.use(sessionMiddleware)
   bot.use(stageMiddleware)
 
-  await bot.telegram.setMyCommands([])
+  await bot.telegram.setMyCommands([
+    {
+      command: "start",
+      description: "Main menu",
+    },
+  ])
 
   bot.command("start", async (ctx) => {
     await ctx.scene.enter("start")
   })
 
+  // If NODE_ENV is "development", delete a webhook and start polling.
   if (NODE_ENV === "development") {
     bot.telegram.deleteWebhook()
     bot.startPolling()
-  } else if (NODE_ENV === "production") {
+  }
+
+  // If NODE_ENV is "production", set a webhook for a given BOT_TOKEN and
+  // start listening for updates on a given PORT.
+  if (NODE_ENV === "production") {
     const webhookRoute = `bot${BOT_TOKEN}`
 
     await bot.telegram.setWebhook(`${APP_URL}${webhookRoute}`)

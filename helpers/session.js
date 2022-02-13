@@ -1,4 +1,3 @@
-const User = require("../models/User")
 const { getUserTelegramId, getUser, updateUser } = require("./user")
 
 const sessionCache = new Map()

@@ -9,6 +9,9 @@ scenes:
 
   settings: |
     Settings
+  
+  channel: |
+    Managing "${channelTitle}"
 
 notifications:
   canManage: |
@@ -19,6 +22,10 @@ notifications:
     Only the owner of ${channelTitle} channel can manage it in the bot.
   joinRequest: |
     You've requested to join ${channelTitle} channel.
+  noAccessToChannel: |
+    The bot can no longer access this channel.
+  canNotActivate: |
+    This channel can't be activated yet. Please setup subscription price, currency and a channel link.
 
 buttons:
   back: Back

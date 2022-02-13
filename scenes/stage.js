@@ -4,6 +4,7 @@ const scenes = [
   require("./start"),
   require("./language"),
   require("./settings"),
+  require("./channel"),
 ]
 
 const stage = new Stage(scenes)
@@ -17,6 +18,11 @@ scenes.forEach((scene) => {
   stage.action(scene.id, async (ctx) => {
     await ctx.scene.enter(scene.id)
   })
+})
+
+stage.action(/channel:(.*)/, async (ctx) => {
+  const channelId = ctx.match[1]
+  await ctx.scene.enter("channel", { channelId })
 })
 
 const stageMiddleware = stage.middleware()
