@@ -165,23 +165,23 @@ async function main() {
 
       if (!isChannelActive(channel)) return
 
-      if (checkSubscription(issuerId, channelId)) {
-        await ctx.telegram.sendMessage(
-          issuerId,
-          ctx.i18n.t("notifications.subscriptionApproved", {
-            channelTitle: channelChat.title,
-            channelLink: channel.link,
-          }),
-          {
-            parse_mode: "HTML",
-          }
-        )
+      // if (checkSubscription(issuerId, channelId)) {
+      //   await ctx.telegram.sendMessage(
+      //     issuerId,
+      //     ctx.i18n.t("notifications.subscriptionApproved", {
+      //       channelTitle: channelChat.title,
+      //       channelLink: channel.link,
+      //     }),
+      //     {
+      //       parse_mode: "HTML",
+      //     }
+      //   )
 
-        return ctx.telegram.callApi("approveChatJoinRequest", {
-          chat_id: channelId,
-          user_id: issuerId,
-        })
-      }
+      //   return ctx.telegram.callApi("approveChatJoinRequest", {
+      //     chat_id: channelId,
+      //     user_id: issuerId,
+      //   })
+      // }
 
       const user = await getUser(issuerId)
 
@@ -264,6 +264,8 @@ async function main() {
 
       if (update_type === "invoice_paid") {
         const [userId, channelId] = payload.split(":")
+
+        // await cryptoPay.transfer()
 
         await createOneMonthOfSubscription(userId, channelId)
 
