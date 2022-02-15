@@ -1,8 +1,9 @@
 const { BaseScene, Markup } = require("telegraf")
 const {
   getChannel,
-  canChannelActivate,
+  isChannelActive,
   updateChannel,
+  canChannelActivate,
 } = require("../helpers/channel")
 
 const channelScene = new BaseScene("channel")
@@ -12,28 +13,38 @@ channelScene.enter(async (ctx) => {
 
   if (!channelId) return ctx.scene.enter("start")
 
-  let channel
+  let channelChat
 
   try {
-    channel = await ctx.telegram.getChat(channelId)
+    channelChat = await ctx.telegram.getChat(channelId)
   } catch (e) {
     await ctx.answerCbQuery(ctx.i18n.t("notifications.noAccessToChannel"), true)
     return
   }
 
+  const channel = await getChannel(channelId)
+  const isActive = isChannelActive(channel)
+
   const text = ctx.i18n.t("scenes.channel", {
-    channelTitle: channel.title,
+    channelTitle: channelChat.title,
   })
 
   const extra = Markup.inlineKeyboard([
     [
-      Markup.callbackButton("Price", `___`),
-      Markup.callbackButton("Currency", `___`),
+      Markup.callbackButton(
+        ctx.i18n.t("buttons.subscriptionPrice"),
+        `setupPrice:${channelId}`
+      ),
+      Markup.callbackButton(
+        ctx.i18n.t("buttons.channelLink"),
+        `setupLink:${channelId}`
+      ),
     ],
-    [Markup.callbackButton("Channel link", `___`)],
     [
       Markup.callbackButton(
-        "Subscription: Deactivated",
+        isActive
+          ? ctx.i18n.t("buttons.subscriptionActivated")
+          : ctx.i18n.t("buttons.subscriptionDeactivated"),
         `toggle-subs:${channelId}`
       ),
     ],
@@ -53,11 +64,10 @@ channelScene.action(/toggle-subs:(.*)/, async (ctx) => {
 
   if (canChannelActivate(channel)) {
     await updateChannel(channelId, { active: !channel.active })
+    await ctx.scene.enter("channel", { channelId })
   } else {
-    await ctx.answerCbQuery(ctx.i18n.t("canNotActivate"), true)
+    await ctx.answerCbQuery(ctx.i18n.t("notifications.canNotActivate"), true)
   }
-
-  await ctx.scene.enter("channel", { channelId })
 })
 
 module.exports = channelScene

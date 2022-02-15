@@ -12,6 +12,23 @@ scenes:
   
   channel: |
     Managing "${channelTitle}"
+  
+  channels: |
+    Channels
+
+    Can't see your channel? Try removing the bot and adding it again to your channel.
+  
+  setupPrice: |
+    Current subscription price: ${currentPrice}
+    
+    To setup or change a subscription price send a price and a currency.
+
+    Example: 1.00 TON
+
+  setupLink: |
+    Current subscription link: ${currentLink}
+    
+    To setup or change a subscription link send a link.
 
 notifications:
   canManage: |
@@ -25,7 +42,14 @@ notifications:
   noAccessToChannel: |
     The bot can no longer access this channel.
   canNotActivate: |
-    This channel can't be activated yet. Please setup subscription price, currency and a channel link.
+    This channel can't be activated yet. Please setup subscription price and a channel link.
+  notSetup: Not setup.
+  priceUpdated: |
+    The subscription price has been updated to ${price} ${currency}.
+  linkUpdated: |
+    The subscription link has been updated to ${link}.
+  subscriptionApproved: |
+    You're now subscribed to <a href="${channelLink}">${channelTitle}</a> channel.
 
 buttons:
   back: Back
@@ -34,4 +58,8 @@ buttons:
   settings: Settings
   language: Language
   manage: Manage
-  paySubscription: Pay subscription
+  paySubscription: Pay subscription — ${price} ${currency}
+  subscriptionPrice: Subscription price
+  channelLink: Channel link
+  subscriptionActivated: "Subscription: activated"
+  subscriptionDeactivated: "Subscription: deactivated"

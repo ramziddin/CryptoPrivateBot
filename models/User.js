@@ -9,14 +9,17 @@ const userSchema = new Schema(
       unique: true,
       required: true,
     },
+    // User's language
     language: {
       type: String,
       enum: ["en", "ru"],
     },
+    // Persisted session data on ctx.session
     session: {
       type: Schema.Types.Mixed,
       default: {},
     },
+    // List of managed channels (Telegram channel IDs)
     channels: [Number],
   },
   {

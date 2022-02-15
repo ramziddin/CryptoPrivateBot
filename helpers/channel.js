@@ -19,7 +19,7 @@ async function deleteChannel(channelId) {
   return await Channel.remove({ id: channelId }).exec()
 }
 
-function canChannelActivate(channel) {
+function isChannelActive(channel) {
   return (
     channel &&
     channel.active &&
@@ -29,10 +29,15 @@ function canChannelActivate(channel) {
   )
 }
 
+function canChannelActivate(channel) {
+  return channel && channel.price && channel.link && channel.currency
+}
+
 module.exports = {
   getChannel,
   createChannel,
   updateChannel,
   deleteChannel,
+  isChannelActive,
   canChannelActivate,
 }

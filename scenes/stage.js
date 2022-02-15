@@ -5,6 +5,8 @@ const scenes = [
   require("./language"),
   require("./settings"),
   require("./channel"),
+  require("./setupPrice"),
+  require("./setupLink"),
 ]
 
 const stage = new Stage(scenes)
@@ -23,6 +25,16 @@ scenes.forEach((scene) => {
 stage.action(/channel:(.*)/, async (ctx) => {
   const channelId = ctx.match[1]
   await ctx.scene.enter("channel", { channelId })
+})
+
+stage.action(/setupPrice:(.*)/, async (ctx) => {
+  const channelId = ctx.match[1]
+  await ctx.scene.enter("setupPrice", { channelId })
+})
+
+stage.action(/setupLink:(.*)/, async (ctx) => {
+  const channelId = ctx.match[1]
+  await ctx.scene.enter("setupLink", { channelId })
 })
 
 const stageMiddleware = stage.middleware()

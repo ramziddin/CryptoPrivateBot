@@ -14,10 +14,9 @@ startScene.enter(async (ctx) => {
 
   const extra = Markup.inlineKeyboard([
     [
-      Markup.callbackButton(ctx.i18n.t("buttons.channels"), "_"),
-      Markup.callbackButton(ctx.i18n.t("buttons.subscriptions"), "_"),
+      Markup.callbackButton(ctx.i18n.t("buttons.channels"), "channels"),
+      Markup.callbackButton(ctx.i18n.t("buttons.settings"), "settings"),
     ],
-    [Markup.callbackButton(ctx.i18n.t("buttons.settings"), "settings")],
   ]).extra()
 
   if (ctx.updateType === "callback_query") {
@@ -25,6 +24,25 @@ startScene.enter(async (ctx) => {
   } else {
     await ctx.reply(text, extra)
   }
+})
+
+startScene.action(/channels/, async (ctx) => {
+  const user = await getUserByCtx(ctx)
+
+  const channels = await Promise.all(
+    user.channels.map(async (channelId) => {
+      return await ctx.telegram.getChat(channelId)
+    })
+  )
+
+  const extra = Markup.inlineKeyboard([
+    ...channels.map((channel) => [
+      Markup.callbackButton(channel.title, `channel:${channel.id}`),
+    ]),
+    [Markup.callbackButton(ctx.i18n.t("buttons.back"), "start")],
+  ]).extra()
+
+  await ctx.editMessageText(ctx.i18n.t("scenes.channels"), extra)
 })
 
 module.exports = startScene

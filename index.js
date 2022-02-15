@@ -10,15 +10,26 @@ const {
   MONGODB_URI,
   APP_URL,
   PORT,
+  CRYPTO_PAY_TOKEN,
 } = require("./helpers/env")
-const { getUserTelegramId, createUser, getUser } = require("./helpers/user")
+const {
+  getUserTelegramId,
+  createUser,
+  getUser,
+  updateUser,
+} = require("./helpers/user")
 const { cryptoPay } = require("./helpers/cryptoPay")
 const {
   getChannel,
   createChannel,
   deleteChannel,
-  canChannelActivate,
+  isChannelActive: isChannelActive,
 } = require("./helpers/channel")
+const {
+  createOneMonthOfSubscription,
+  checkSubscription,
+} = require("./helpers/subscription")
+const bodyParser = require("body-parser")
 
 async function main() {
   await mongoose.connect(MONGODB_URI)
@@ -97,6 +108,12 @@ async function main() {
               await createChannel(chat.id)
             }
 
+            if (!user.channels.includes(chat.id)) {
+              await updateUser(id, {
+                channels: [...user.channels, chat.id],
+              })
+            }
+
             await ctx.telegram.sendMessage(
               id,
               ctx.i18n.t("notifications.canManage", {
@@ -135,21 +152,48 @@ async function main() {
     const joinRequest = ctx.update.chat_join_request
     if (joinRequest) {
       const issuerId = joinRequest.from.id
+      const issuer = await getUser(issuerId)
+
+      ctx.i18n.locale(issuer?.language || "en")
 
       const { id: channelId, title: channelTitle } = joinRequest.chat
 
       const channel = await getChannel(channelId)
+      const channelChat = await ctx.telegram.getChat(channelId)
 
-      if (!canChannelActivate(channel)) return
+      console.log(channel, channelChat, issuer)
+
+      if (!isChannelActive(channel)) return
+
+      if (checkSubscription(issuerId, channelId)) {
+        await ctx.telegram.sendMessage(
+          issuerId,
+          ctx.i18n.t("notifications.subscriptionApproved", {
+            channelTitle: channelChat.title,
+            channelLink: channel.link,
+          }),
+          {
+            parse_mode: "HTML",
+          }
+        )
+
+        return ctx.telegram.callApi("approveChatJoinRequest", {
+          chat_id: channelId,
+          user_id: issuerId,
+        })
+      }
 
       const user = await getUser(issuerId)
 
       ctx.i18n.locale(user?.language || "en")
 
+      const payload = `${user.id}:${channelId}`
+
       const invoice = await cryptoPay.createInvoice(
         channel.currency,
         channel.price,
         {
+          payload,
           paid_btn_name: "openChannel",
           paid_btn_url: channel.link,
         }
@@ -164,7 +208,10 @@ async function main() {
           Markup.inlineKeyboard([
             [
               Markup.urlButton(
-                ctx.i18n.t("buttons.paySubscription"),
+                ctx.i18n.t("buttons.paySubscription", {
+                  price: channel.price,
+                  currency: channel.currency,
+                }),
                 invoice.pay_url
               ),
             ],
@@ -206,6 +253,29 @@ async function main() {
     const server = express()
 
     server.use(bot.webhookCallback(`/${webhookRoute}`))
+
+    server.use(bodyParser.json())
+
+    server.post(`/${CRYPTO_PAY_TOKEN}`, async (req, res) => {
+      const {
+        update_type,
+        payload: { payload },
+      } = req.body
+
+      if (update_type === "invoice_paid") {
+        const [userId, channelId] = payload.split(":")
+
+        await createOneMonthOfSubscription(userId, channelId)
+
+        // approveChatJoinRequest is not supported by telegraf@^3.39.0
+        await bot.telegram.callApi("approveChatJoinRequest", {
+          chat_id: channelId,
+          user_id: userId,
+        })
+
+        await res.end()
+      }
+    })
 
     server.listen(PORT)
   }

@@ -1,4 +1,5 @@
 const { model, Schema } = require("mongoose")
+const { CURRENCIES } = require("../helpers/constants")
 
 // Represents a Telegram channel
 const channelSchema = new Schema({
@@ -21,7 +22,7 @@ const channelSchema = new Schema({
   // A currency supported by @CryptoBot
   currency: {
     type: String,
-    enum: ["BTC", "TON", "USDT", "USDC", "BUSD"],
+    enum: CURRENCIES,
   },
   // Subscription price
   price: {
